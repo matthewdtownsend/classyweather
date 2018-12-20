@@ -1,1 +1,5 @@
-FLASK_APP=weather.py flask run --host=0.0.0.0
+#!/bin/bash
+
+# Flask helper file
+
+FLASK_APP=app.py flask run --host=0.0.0.0
