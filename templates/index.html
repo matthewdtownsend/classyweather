@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+   <h1>Environment Canada Weather Data</h1>
+   {% for province in list %}
+     <h2>{{province.name}}</h2>
+     <ul>
+     {% for site in province.sites %}
+       <li>
+         <a href="/site/{{site.code}}">{{site.nameEn}}</a>
+       </li>
+     {% endfor %}
+     </ul>
+  {% endfor %}
+{% endblock %}

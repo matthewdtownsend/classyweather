@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>{{nameEn}}, {{province}}</h1>
+    <p>Current temperature: {{temp_c}}C [{{temp_f}}F]</p>
+    <p>Current pressure: {{pressure}}</p>
+    <p>{{home}}</p>
+<hr />
+<div class="row">
+{% for period in forecast %}
+<div class="col-md-6">
+{{period.name}}
+{{period.textSummary}}
+</div>
+{% endfor %}
+</div>
+    <hr />
+    <p>Data URL: {{url}} - Environment Canada timestamp: {{timetext}}</p>
+{% endblock %}
