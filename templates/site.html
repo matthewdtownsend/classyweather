@@ -2,18 +2,28 @@
 
 {% block content %}
     <h1>{{nameEn}}, {{province}}</h1>
-    <p>Current temperature: {{temp_c}}C [{{temp_f}}F]</p>
-    <p>Current pressure: {{pressure}}</p>
-    <p>{{home}}</p>
+<div class="row">
+    <div class="current col-md-12">
+        <p>Current temperature: {{temp_c}}C [{{temp_f}}F]</p>
+         <p>Current pressure: {{pressure}}</p>
+    </div>
+</div>
 <hr />
 <div class="row">
-{% for period in forecast %}
-<div class="col-md-6">
-{{period.name}}
-{{period.textSummary}}
+    {% for period in forecast %}
+    <div class="col-md-6">
+      <div class="forecast-day">
+        {{period.name}}
+        {{period.textSummary}}
+        </div>
+    </div>
+    {% endfor %}
+    {{home}}
 </div>
-{% endfor %}
+<hr />
+<div class="row">
+    <div class="current col-md-12">
+        <p>Data URL: {{url}} - Environment Canada timestamp: {{timetext}}</p>
+    </div>
 </div>
-    <hr />
-    <p>Data URL: {{url}} - Environment Canada timestamp: {{timetext}}</p>
 {% endblock %}

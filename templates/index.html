@@ -3,10 +3,10 @@
 {% block content %}
 
    <h1>Environment Canada Weather Data</h1>
-   {% for province in list %}
-     <h2>{{province.name}}</h2>
+   {% for province, sites in site_list.iteritems()|sort() %}
+     <h2>{{province}}</h2>
      <ul>
-     {% for site in province.sites %}
+     {% for site in sites|sort(attribute='nameEn') %}
        <li>
          <a href="/site/{{site.code}}">{{site.nameEn}}</a>
        </li>

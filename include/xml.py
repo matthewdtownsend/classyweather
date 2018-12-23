@@ -12,8 +12,8 @@ from lxml import etree
 # and fetch it, if not. Not sure if this caching layer is needed, yet.
 
 def get_xml( url ):
-  hash = hashlib.md5(url)
-  file = "cache/" + hash.hexdigest() + ".xml"
+  url_hash = hashlib.md5(url)
+  file = "cache/" + url_hash.hexdigest() + ".xml"
   xml = False
   if os.path.isfile(file):
     xml = read_xml_cache(file)

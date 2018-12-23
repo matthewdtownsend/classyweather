@@ -3,8 +3,11 @@
 import os
 import jinja2
 from include.data_layer import *
-from flask import Flask
+from include.utilities import *
+from flask import Flask, request, send_from_directory
 import markup
+
+ec_data = EnvironmentCanadaData()
 
 # Setup Flask and Jinja2 variables
 app = Flask(__name__)
@@ -15,36 +18,32 @@ jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir))
 @app.route("/")
 def city_weather():
   template = jinja_env.get_template("index.html")
-  list = []
-  for i in data.provinces:
-    province = {'name': i, 'sites':[]} 
-    for site in [x for x in data.sites if x.province == i]:
-      province['sites'].append({"code": site.code, "nameEn": site.nameEn})
-    list.append(province)
   return template.render(
-    list = list
+    site_list = ec_data.provinces
   )
 
 @app.route("/site/<code>")
 def site_page(code):
   # Find a site that matches this code
-  site = next((x for x in data.sites if x.code == code), None)
-  weather = site.weather['En']
+  site = ec_data.sites[code]
   # Load weather data for this site. Data is not preloaded to avoid
   # downloading entire batch of Environment Canada data on first run.
-  weather.load()
   template = jinja_env.get_template("site.html")
   return template.render(
     nameEn = site.nameEn,
     province = site.province,
-    temp_c = weather.current('temperature'),
-    temp_f = c_to_f(weather.current('temperature')),
-    pressure = weather.current('pressure'),
-    forecast = weather.forecast(),
+    temp_c = site.current('temperature'),
+    temp_f = c_to_f(site.current('temperature')),
+    pressure = site.current('pressure'),
+    forecast = site.forecast(),
     home = home(),
-    url = site.weather['En'].xml_url,
-    timetext = weather.timetext,
+    url = site.data_url(),
+    timetext = site.load_weather()[2],
   )
+
+@app.route('/assets/<path:path>')
+def send_assets(path):
+    return send_from_directory('assets', path)
 
 def home():
   return "<a href='/'>Home</a>"
