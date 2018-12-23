@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from include.xml import *
+from include.utilities import *
 import collections
 
 # Holds pertinent info for a weather site, with French and English instant-
@@ -28,20 +29,16 @@ class Site:
   def data_url(self, lang='En'):
     return "%s/%s/%s%s.xml" % (self.base_url, self.province, self.code, self.lang_suffix[lang])
 
-  def current(self, field):
-    xml, timestamp, timetext = self.load_weather()
-    try:
-      condition = xml.xpath('currentConditions/'+field)[0].text
-    except:
-      condition = "No data"
-    return condition
-
   def forecast(self):
     forecast = []
     xml, timestamp, timetext = self.load_weather()
     for i in xml.xpath('forecastGroup/forecast'):
       forecast.append(Forecast(i))
     return forecast
+
+  def current_conditions(self):
+    xml, timestamp, timetext = self.load_weather()
+    return CurrentConditions(xml)
 
   def query(self, query):
     xml, timestamp, timetext = self.load_weather()
@@ -50,11 +47,17 @@ class Site:
   def __str__(self):
     return "Canada Environment site %s" % self.code
 
-class Forecast:
-  def __init__(self, data):
-    self.name = data.xpath("period")[0].text
-    self.textSummary = data.xpath("textSummary")[0].text
+class CurrentConditions:
+  def __init__(self, xml):
+    self.temp_c = xml.xpath('currentConditions/temperature')[0].text
+    self.temp_f = c_to_f(xml.xpath('currentConditions/temperature')[0].text)
+    self.pressure = xml.xpath('currentConditions/pressure')[0].text
 
+class Forecast:
+  def __init__(self, xml):
+    self.name = xml.xpath("period")[0].text
+    self.icon_code = icon_url(xml.xpath("abbreviatedForecast/iconCode")[0].text)
+    self.textSummary = xml.xpath("textSummary")[0].text
 
 # No place for helper functions to live yet - haven't decided if I want tied
 # to objects.
@@ -88,3 +91,7 @@ class EnvironmentCanadaData:
     site_names = {v.nameEn: v for k,v in self.sites}
     return site_names
 
+def icon_url(icon_code):
+  icon_base_url = "https://weather.gc.ca/weathericons"
+  extension = "gif"
+  return "%s/%s.%s" % (icon_base_url, icon_code, extension)

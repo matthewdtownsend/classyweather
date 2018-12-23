@@ -3,7 +3,6 @@
 import os
 import jinja2
 from include.data_layer import *
-from include.utilities import *
 from flask import Flask, request, send_from_directory
 import markup
 
@@ -32,10 +31,8 @@ def site_page(code):
   return template.render(
     nameEn = site.nameEn,
     province = site.province,
-    temp_c = site.current('temperature'),
-    temp_f = c_to_f(site.current('temperature')),
-    pressure = site.current('pressure'),
     forecast = site.forecast(),
+    current_conditions = site.current_conditions(),
     home = home(),
     url = site.data_url(),
     timetext = site.load_weather()[2],

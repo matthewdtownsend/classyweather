@@ -6,5 +6,3 @@ def c_to_f( c ):
     return str(round(f,1))
   except:
     return "No data"
-
-# https://weather.gc.ca/weathericons/16.gif

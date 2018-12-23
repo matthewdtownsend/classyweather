@@ -4,8 +4,8 @@
     <h1>{{nameEn}}, {{province}}</h1>
 <div class="row">
     <div class="current col-md-12">
-        <p>Current temperature: {{temp_c}}C [{{temp_f}}F]</p>
-         <p>Current pressure: {{pressure}}</p>
+        <p>Current temperature: {{current_conditions.temp_c}}C [{{current_conditions.temp_f}}F]</p>
+         <p>Current pressure: {{current_conditions.pressure}}</p>
     </div>
 </div>
 <hr />
@@ -13,7 +13,8 @@
     {% for period in forecast %}
     <div class="col-md-6">
       <div class="forecast-day">
-        {{period.name}}
+        <h3><img src="{{period.icon_code}}" alt="" style="width: 32px; height: auto;" />
+        {{period.name}}</h3>
         {{period.textSummary}}
         </div>
     </div>
