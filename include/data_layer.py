@@ -52,11 +52,12 @@ class CurrentConditions:
     self.temp_c = xml.xpath('currentConditions/temperature')[0].text
     self.temp_f = c_to_f(xml.xpath('currentConditions/temperature')[0].text)
     self.pressure = xml.xpath('currentConditions/pressure')[0].text
+    self.icon = icon_url(xml.xpath("currentConditions/iconCode")[0].text)
 
 class Forecast:
   def __init__(self, xml):
     self.name = xml.xpath("period")[0].text
-    self.icon_code = icon_url(xml.xpath("abbreviatedForecast/iconCode")[0].text)
+    self.icon = icon_url(xml.xpath("abbreviatedForecast/iconCode")[0].text)
     self.textSummary = xml.xpath("textSummary")[0].text
 
 # No place for helper functions to live yet - haven't decided if I want tied
@@ -90,8 +91,3 @@ class EnvironmentCanadaData:
   def get_sites_by_name(self):
     site_names = {v.nameEn: v for k,v in self.sites}
     return site_names
-
-def icon_url(icon_code):
-  icon_base_url = "https://weather.gc.ca/weathericons"
-  extension = "gif"
-  return "%s/%s.%s" % (icon_base_url, icon_code, extension)

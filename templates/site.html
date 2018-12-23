@@ -3,7 +3,9 @@
 {% block content %}
     <h1>{{nameEn}}, {{province}}</h1>
 <div class="row">
-    <div class="current col-md-12">
+    <div class="current col-md-12 text-center">
+        <img src="{{current_conditions.icon}}" alt="" />
+
         <p>Current temperature: {{current_conditions.temp_c}}C [{{current_conditions.temp_f}}F]</p>
          <p>Current pressure: {{current_conditions.pressure}}</p>
     </div>
@@ -13,7 +15,7 @@
     {% for period in forecast %}
     <div class="col-md-6">
       <div class="forecast-day">
-        <h3><img src="{{period.icon_code}}" alt="" style="width: 32px; height: auto;" />
+        <h3><img src="{{period.icon}}" alt="" style="width: 32px; height: auto;" />
         {{period.name}}</h3>
         {{period.textSummary}}
         </div>
