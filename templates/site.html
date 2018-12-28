@@ -1,18 +1,25 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h1>{{nameEn}}, {{province}}</h1>
+    <h1>{{site.nameEn}}, {{site.province}}</h1>
 <div class="row">
-    <div class="current col-md-12 text-center">
-        <img src="{{current_conditions.icon}}" alt="" />
+    <div class="current col-lg-5  text-center">
+        <img src="{{site.current_conditions().icon}}" alt="" />
 
-        <p>Current temperature: {{current_conditions.temp_c}}C [{{current_conditions.temp_f}}F]</p>
-         <p>Current pressure: {{current_conditions.pressure}}</p>
+        <p>Current temperature: {{site.current_conditions().temp_c}}C [{{site.current_conditions().temp_f}}F]</p>
+         <p>Current pressure: {{site.current_conditions().pressure}}</p>
+    </div>
+    <div class="current col-lg-7 text-center">
+        <div style="position: relative; width: 100%; padding-top: 82.758%;">
+            <img style="position: absolute; top: 0; left: 0; width: 100%;" class="img-responsive" src="{{site.radar().precipet_list.0}}" />
+            <img style="position: absolute; top: 0; left: 0; width: 100%;" class="img-responsive" src="{{site.radar().bg}}" />
+        
+        </div>
     </div>
 </div>
 <hr />
 <div class="row">
-    {% for period in forecast %}
+    {% for period in site.forecast() %}
     <div class="col-md-6">
       <div class="forecast-day">
         <h3><img src="{{period.icon}}" alt="" style="width: 32px; height: auto;" />
@@ -21,12 +28,12 @@
         </div>
     </div>
     {% endfor %}
-    {{home}}
 </div>
 <hr />
 <div class="row">
     <div class="current col-md-12">
-        <p>Data URL: {{url}} - Environment Canada timestamp: {{timetext}}</p>
+        <p>{{home}}</p>
+        <p>Data URL: {{site.data_url()}} - Environment Canada timestamp: {{timetext}}</p>
     </div>
 </div>
 {% endblock %}

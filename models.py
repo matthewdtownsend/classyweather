@@ -1,27 +1,43 @@
-#!/usr/bin/python
-
-from include.xml import *
-from include.utilities import *
 import collections
+from bs4 import BeautifulSoup
+from xml_manager import ecXML
+import requests
+from data_layer import WeatherDB
+import re
+import sys
+from utilities import icon_url, c_to_f
+
+ec_data = WeatherDB()
+ec_data.init_xml()
 
 # Holds pertinent info for a weather site, with French and English instant-
 # iations of Weather objects.
 
+class Sites:
+    def __init__(self):
+        # self.list = ec_data.list_sites()
+        site_dict = {}
+        provinces = ec_data.list_provinces()
+        for province in provinces:
+            site_dict[province[0]] = ec_data.list_sites_by_province(province)
+        self.list = site_dict
+
 class Site:
-  def __init__(self,data):
+  def __init__(self,code):
+    site_data = ec_data.get_site(code)
     self.base_url = "http://dd.weather.gc.ca/citypage_weather/xml"
     self.lang_suffix = {
       'En': '_e',
       'Fr': '_f' 
     }
-    self.province = data.find("provinceCode").text
-    self.nameEn = data.find("nameEn").text
-    self.nameFr = data.find("nameFr").text
-    self.code = data.attrib['code']
+    self.province = site_data['province']
+    self.nameEn = site_data['nameEn']
+    self.nameFr = site_data['nameFr']
+    self.code = site_data['code']
+    self.weather_station = site_data['weather_station']
 
   def load_weather(self, lang='En'):
-    xml_url = self.data_url()
-    xml = get_xml(xml_url)
+    xml = ecXML(self.data_url()).root
     timestamp =  xml.xpath("dateTime[not(@zone = 'UTC')]/timeStamp")[0].text
     timetext =  xml.xpath("dateTime[not(@zone = 'UTC')]/textSummary")[0].text
     return (xml, timestamp, timetext)
@@ -43,6 +59,9 @@ class Site:
   def query(self, query):
     xml, timestamp, timetext = self.load_weather()
     return xml.xpath(query)[0].text
+  
+  def radar(self):
+    return Radar(self.code)
 
   def __str__(self):
     return "Canada Environment site %s" % self.code
@@ -60,34 +79,18 @@ class Forecast:
     self.icon = icon_url(xml.xpath("abbreviatedForecast/iconCode")[0].text)
     self.textSummary = xml.xpath("textSummary")[0].text
 
-# No place for helper functions to live yet - haven't decided if I want tied
-# to objects.
+class Radar:
+  def __init__(self, site_code):
+    self.weather_station = "XGO"
+    self.bg = "https://weather.gc.ca/cacheable/images/radar/layers/default_cities/%s_towns.gif" % (self.weather_station.lower())
+    self.precipet_list = self.radar_list()
 
-# Data object, to emulate a database on top of Environment of Canada XML files.
-# Treating all data as a child of Data object. Perhaps not helpful, as we don't
-# strictly need to load the sitelist file into memory. However, validation of
-# site URLs would need this list, so I see sense in loading it into memory no
-# matter what. 
-# Database layer to come later.
-
-class EnvironmentCanadaData:
-  def __init__(self):
-    sitelist_xml = get_xml('http://dd.weather.gc.ca/citypage_weather/xml/siteList.xml')
-    self.sites = {}
-    self.provinces = {}
-
-    for i in sitelist_xml.findall("site"):
-      # We need a list of provinces (for convenience), in addition to a list of
-      # site objects.
-      site_object = Site(i)
-      site_code = i.attrib['code']
-      province = site_object.province
-      self.sites[site_code] = site_object
-      province_list = self.provinces.get(province, [])
-      province_list.append(site_object)
-      self.provinces[province] = province_list
-    # self.sites.sort(key=lambda x: x.nameEn)
-
-  def get_sites_by_name(self):
-    site_names = {v.nameEn: v for k,v in self.sites}
-    return site_names
+  def radar_list(self, type = "PRECIPET"):
+    radar_url = "http://dd.weather.gc.ca/radar/%s/GIF/%s" % (type, self.weather_station)
+    response = requests.get(radar_url)
+    radar_list_page = BeautifulSoup(response.content, 'html.parser')
+    radar_list = []
+    for link in radar_list_page.find_all("a", {'href': re.compile(r'%s_%s_[A-Z][A-Z][A-Z][A-Z].gif' % (self.weather_station, type))}):
+      radar_list.append("%s/%s" % (radar_url, link.attrs['href']))
+    radar_list.sort(reverse=True)
+    return radar_list

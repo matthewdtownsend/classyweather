@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 def c_to_f( c ):
   try:
     f = 1.8*float(c) + 32
