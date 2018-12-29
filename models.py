@@ -8,14 +8,12 @@ import sys
 from utilities import icon_url, c_to_f
 
 ec_data = WeatherDB()
-ec_data.init_xml()
 
 # Holds pertinent info for a weather site, with French and English instant-
 # iations of Weather objects.
 
 class Sites:
     def __init__(self):
-        # self.list = ec_data.list_sites()
         site_dict = {}
         provinces = ec_data.list_provinces()
         for province in provinces:
@@ -37,10 +35,10 @@ class Site:
     self.weather_station = site_data['weather_station']
 
   def load_weather(self, lang='En'):
-    xml = ecXML(self.data_url()).root
-    timestamp =  xml.xpath("dateTime[not(@zone = 'UTC')]/timeStamp")[0].text
-    timetext =  xml.xpath("dateTime[not(@zone = 'UTC')]/textSummary")[0].text
-    return (xml, timestamp, timetext)
+    weather = ec_data.get_weather(self)
+    if weather is None:
+        weather = ec_data.add_weather(self)
+    return (weather['xml'], weather['timestamp'], weather['timetext'])
 
   def data_url(self, lang='En'):
     return "%s/%s/%s%s.xml" % (self.base_url, self.province, self.code, self.lang_suffix[lang])
