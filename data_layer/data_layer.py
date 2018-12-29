@@ -15,9 +15,11 @@ from lxml import etree
 reload(sys)  
 sys.setdefaultencoding('utf8')
 
-# Database
+# Database object - one object handle all database interactions.
 
 class WeatherDB:
+
+  # On load, ensure a config is installed, that the database can be reached, and that the database is setup.
   def __init__(self):
     try:
       with open('config.json', 'r') as f:
@@ -41,6 +43,7 @@ class WeatherDB:
       print("Unable to connect to the database")
       sys.exit()
 
+    # Check to see if database_is_setup flag is set, and if not, run installation functions.
     try: 
       if self.variable_get('database_is_setup') is None:
         self.install_ecdata()
@@ -48,65 +51,64 @@ class WeatherDB:
         self.install_ecdata()
     self.install_ecdata()
 
+  # Installation functions
 
   def install_ecdata(self):
     self.configure_database()
     self.load_sitelist_xml()
     self.variable_set('database_is_setup',True)
 
-
   def configure_database(self):
-    self.conn.commit()
-    self.cur.execute("DROP TABLE IF EXISTS sites")
-    self.cur.execute("DROP TABLE IF EXISTS provinces")
-    self.cur.execute("DROP TABLE IF EXISTS weather")
-    self.cur.execute("DROP TABLE IF EXISTS variables")
-    self.cur.execute("""
-      CREATE TABLE IF NOT EXISTS sites (
-        id serial PRIMARY KEY,
-        code varchar NOT NULL UNIQUE,
-        nameEn varchar,
-        nameFr varchar,
-        province varchar,
-        weather_station varchar
-      );
-    """)
-    self.cur.execute("""
-      CREATE TABLE IF NOT EXISTS weather (
-        id serial PRIMARY KEY,
-        site_code varchar NOT NULL UNIQUE,
-        xml varchar,
-        timestamp varchar,
-        timetext varchar
-      );
-    """)
-    self.cur.execute("""
-      CREATE TABLE IF NOT EXISTS provinces (
-        id serial PRIMARY KEY,
-        code varchar NOT NULL UNIQUE,
-        long_name varchar
-      );
-    """)
-    self.cur.execute("""
-      CREATE TABLE IF NOT EXISTS variables (
-        name varchar NOT NULL UNIQUE,
-        value varchar
-      );
-    """)
-    self.conn.commit()
-    #except Exception, e:
-    #  print("Can't create database table")
-    #  print (str(e))
-    #  sys.exit()
+    try:
+      self.cur.execute("DROP TABLE IF EXISTS sites")
+      self.cur.execute("DROP TABLE IF EXISTS provinces")
+      self.cur.execute("DROP TABLE IF EXISTS weather")
+      self.cur.execute("DROP TABLE IF EXISTS variables")
+      self.cur.execute("""
+        CREATE TABLE IF NOT EXISTS sites (
+          id serial PRIMARY KEY,
+          code varchar NOT NULL UNIQUE,
+          nameEn varchar,
+          nameFr varchar,
+          province varchar,
+          weather_station varchar
+        );
+      """)
+      self.cur.execute("""
+        CREATE TABLE IF NOT EXISTS weather (
+          id serial PRIMARY KEY,
+          site_code varchar NOT NULL UNIQUE,
+          xml varchar,
+          timestamp varchar,
+          timetext varchar
+        );
+      """)
+      self.cur.execute("""
+        CREATE TABLE IF NOT EXISTS provinces (
+          id serial PRIMARY KEY,
+          code varchar NOT NULL UNIQUE,
+          long_name varchar
+        );
+      """)
+      self.cur.execute("""
+        CREATE TABLE IF NOT EXISTS variables (
+          name varchar NOT NULL UNIQUE,
+          value varchar
+        );
+      """)
+      self.conn.commit()
+    except Exception, e:
+      print("Can't create database table")
+      print (str(e))
+      sys.exit()
+
+  # Site and site list functions
 
   def load_sitelist_xml(self):
     sitelist_xml = ecXML('http://dd.weather.gc.ca/citypage_weather/xml/siteList.xml').root
     self.sites = {}
     self.provinces = {}
-
     for i in sitelist_xml.findall("site"):
-      # We need a list of provinces (for convenience), in addition to a list of
-      # site objects.
       site_code = i.attrib['code']
       province = i.find("provinceCode").text
       nameEn = i.find("nameEn").text
@@ -118,6 +120,19 @@ class WeatherDB:
     self.cur.execute("""INSERT INTO sites (code, province, nameEn, nameFr)
       VALUES (%s, %s, %s, %s) ON CONFLICT DO NOTHING""", (site_code, province, nameEn, nameFr))
     self.conn.commit()
+
+  def get_site(self, code):
+    self.cur.execute("SELECT code,nameEn,nameFr,weather_station, province from sites WHERE code = %s", (code,))
+    record = self.cur.fetchone()
+    return {
+      'code': record[0],
+      'nameEn': record[1],
+      'nameFr': record[2],
+      'weather_station': record[3],
+      'province': record[4]
+    }
+
+  # Provincial functions
 
   def add_province(self, province):
     self.cur.execute("INSERT INTO provinces (code) VALUES (%s) ON CONFLICT DO NOTHING", (province,))
@@ -138,16 +153,7 @@ class WeatherDB:
       })
     return sites
 
-  def get_site(self, code):
-    self.cur.execute("SELECT code,nameEn,nameFr,weather_station, province from sites WHERE code = %s", (code,))
-    record = self.cur.fetchone()
-    return {
-      'code': record[0],
-      'nameEn': record[1],
-      'nameFr': record[2],
-      'weather_station': record[3],
-      'province': record[4]
-    }
+  # Weather data functions
 
   def add_weather(self, site):
     xml_obj = ecXML(site.data_url())
@@ -186,6 +192,8 @@ class WeatherDB:
       'timestamp': result['timestamp'],
       'timetext': result['timetext']
     }
+
+  # Stored variable functions
 
   def variable_get(self, var_name):
     self.cur.execute("SELECT value from variables WHERE name = %s", (var_name,))
