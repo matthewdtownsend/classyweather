@@ -1,16 +1,14 @@
-import collections
-from xml_manager import ecXML
-from bs4 import BeautifulSoup
-import requests
-import re
+from ec_data_reader import ecXML, ecStation, ecRadarList
 import psycopg2
 import json
 import sys
-import io
 import time
 import datetime
+import io
 import cPickle as pickle
 from lxml import etree
+
+# Bugfix: Frenchy names break the database functions in ASCII mode.
 
 reload(sys)  
 sys.setdefaultencoding('utf8')
@@ -192,6 +190,14 @@ class WeatherDB:
       'timestamp': result['timestamp'],
       'timetext': result['timetext']
     }
+
+  # Weather station functions
+
+  def set_weather_station(self, site):
+    station = ecStation(site).station_code
+    self.cur.execute("UPDATE sites SET weather_station = %s WHERE code = %s", (station,site.code))
+    self.conn.commit()
+    return station
 
   # Stored variable functions
 
