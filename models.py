@@ -1,6 +1,4 @@
 import collections
-from bs4 import BeautifulSoup
-import requests
 from data_layer import WeatherDB
 import sys
 import re
@@ -8,8 +6,7 @@ from utilities import icon_url, c_to_f
 
 ec_data = WeatherDB()
 
-# Holds pertinent info for a weather site, with French and English instant-
-# iations of Weather objects.
+# Object to generate site list
 
 class Sites:
     def __init__(self):
@@ -19,10 +16,12 @@ class Sites:
             site_dict[province[0]] = ec_data.list_sites_by_province(province)
         self.list = site_dict
 
+# Holds pertinent info for a weather site, with French and English instant-
+# iations of Weather objects.
+
 class Site:
   def __init__(self,code):
     site_data = ec_data.get_site(code)
-    self.base_url = "http://dd.weather.gc.ca/citypage_weather/xml"
     self.lang_suffix = {
       'En': '_e',
       'Fr': '_f' 
@@ -43,7 +42,7 @@ class Site:
     return (weather['xml'], weather['timestamp'], weather['timetext'])
 
   def data_url(self, lang='En'):
-    return "%s/%s/%s%s.xml" % (self.base_url, self.province, self.code, self.lang_suffix[lang])
+    return "citypage_weather/xml/%s/%s%s.xml" % (self.province, self.code, self.lang_suffix[lang])
 
   def forecast(self):
     forecast = []
@@ -51,6 +50,13 @@ class Site:
     for i in xml.xpath('forecastGroup/forecast'):
       forecast.append(Forecast(i))
     return forecast
+
+  def hourly_forecast(self):
+    hourly_forecast = []
+    xml, timestamp, timetext = self.load_weather()
+    for i in xml.xpath('hourlyForecastGroup/hourlyForecast'):
+      hourly_forecast.append(HourlyForecast(i))
+    return hourly_forecast
 
   def current_conditions(self):
     xml, timestamp, timetext = self.load_weather()
@@ -66,6 +72,8 @@ class Site:
   def __str__(self):
     return "Canada Environment site %s" % self.code
 
+# Objects for various weather data components
+
 class CurrentConditions:
   def __init__(self, xml):
     self.temp_c = xml.xpath('currentConditions/temperature')[0].text
@@ -79,6 +87,13 @@ class Forecast:
     self.icon = icon_url(xml.xpath("abbreviatedForecast/iconCode")[0].text)
     self.textSummary = xml.xpath("textSummary")[0].text
 
+class HourlyForecast:
+  def __init__(self, xml):
+    self.time = xml.xpath("@dateTimeUTC")[0]
+    self.condition = xml.xpath("condition")[0].text
+    self.icon = icon_url(xml.xpath("iconCode")[0].text)
+    self.temperature = xml.xpath("temperature")[0].text
+
 class Radar:
   def __init__(self, station):
     self.station = station
@@ -86,11 +101,4 @@ class Radar:
     self.precipet_list = self.radar_list()
 
   def radar_list(self, type = "PRECIPET"):
-    radar_url = "http://dd.weather.gc.ca/radar/%s/GIF/%s" % (type, self.station)
-    response = requests.get(radar_url)
-    radar_list_page = BeautifulSoup(response.content, 'html.parser')
-    radar_list = []
-    for link in radar_list_page.find_all("a", {'href': re.compile(r'%s_%s_[A-Z][A-Z][A-Z][A-Z].gif' % (self.station, type))}):
-      radar_list.append("%s/%s" % (radar_url, link.attrs['href']))
-    radar_list.sort(reverse=True)
-    return radar_list
+    return ec_data.get_radar_list(self.station)

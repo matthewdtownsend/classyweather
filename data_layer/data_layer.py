@@ -103,7 +103,7 @@ class WeatherDB:
   # Site and site list functions
 
   def load_sitelist_xml(self):
-    sitelist_xml = ecXML('http://dd.weather.gc.ca/citypage_weather/xml/siteList.xml').root
+    sitelist_xml = ecXML('citypage_weather/xml/siteList.xml').root
     self.sites = {}
     self.provinces = {}
     for i in sitelist_xml.findall("site"):
@@ -198,6 +198,11 @@ class WeatherDB:
     self.cur.execute("UPDATE sites SET weather_station = %s WHERE code = %s", (station,site.code))
     self.conn.commit()
     return station
+
+  # Radar functions - currently a passthrough via ec_data_reader without database storage/caching
+
+  def get_radar_list(self, station):
+    return ecRadarList(station).radar_list
 
   # Stored variable functions
 

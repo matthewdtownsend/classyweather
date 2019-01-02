@@ -7,14 +7,20 @@ import requests
 from lxml import etree
 from bs4 import BeautifulSoup
 
-# Determine whether we have a recently fetched version of an XML file on server 
-# and fetch it, if not. Not sure if this caching layer is needed, yet.
+# Note: the Canadian government suggests MSC Geomet for data, but right now we're getting this from HTTP.
+
+# Fetch remote XML and parse into object
 
 class ecXML:
   def __init__(self, url):
-    response = urllib.urlopen(url)
+    base_url = 'http://dd.weather.gc.ca'
+    response = urllib.urlopen("%s/%s" % (base_url, url))
     self.xml = response.read()
     self.root = etree.fromstring(self.xml)
+
+# Determine the weather station associated with a city. This requires (so far as I can tell) checking the list
+# of cities for a URL to an individual city page, and then checking that page for a radar link. None of this
+# seems to be in XML.
 
 class ecStation:
   def __init__(self, site):
@@ -32,15 +38,14 @@ class ecStation:
     except:
       self.station_code = None
 
-
+# Get a list of most recent radar files for a given weather station. A directory listing is available.
 
 class ecRadarList:
-  def __init__(self, type = "PRECIPET"):
-    radar_url = "http://dd.weather.gc.ca/radar/%s/GIF/%s" % (type, self.weather_station)
+  def __init__(self, station, type = "PRECIPET"):
+    radar_url = "http://dd.weather.gc.ca/radar/%s/GIF/%s" % (type, station)
     response = requests.get(radar_url)
     radar_list_page = BeautifulSoup(response.content, 'html.parser')
-    radar_list = []
-    for link in radar_list_page.find_all("a", {'href': re.compile(r'%s_%s_[A-Z][A-Z][A-Z][A-Z].gif' % (self.weather_station, type))}):
-      radar_list.append("%s/%s" % (radar_url, link.attrs['href']))
-    radar_list.sort(reverse=True)
-    return radar_list
+    self.radar_list = []
+    for link in radar_list_page.find_all("a", {'href': re.compile(r'%s_%s_[A-Z][A-Z][A-Z][A-Z].gif' % (station, type))}):
+      self.radar_list.append("%s/%s" % (radar_url, link.attrs['href']))
+    self.radar_list.sort(reverse=True)

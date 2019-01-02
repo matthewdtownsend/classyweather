@@ -18,6 +18,21 @@
     </div>
 </div>
 <hr />
+<h2>Hourly Forecast</h2>
+<div class="row">
+    {% for period in site.hourly_forecast() %}
+    <div class="col-md-6">
+      <div class="forecast-day">
+        <h3><img src="{{period.icon}}" alt="" style="width: 32px; height: auto;" />
+        {{period.condition}}
+        {{period.time}}<br />
+        {{period.temperature}}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+<hr />
+<h2>Long-term Forecast</h2>
 <div class="row">
     {% for period in site.forecast() %}
     <div class="col-md-6">
