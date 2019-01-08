@@ -78,7 +78,8 @@ class WeatherDB:
           site_code varchar NOT NULL UNIQUE,
           xml varchar,
           timestamp varchar,
-          timetext varchar
+          timetext varchar,
+          url varchar
         );
       """)
       self.cur.execute("""
@@ -159,10 +160,11 @@ class WeatherDB:
     site.data_url = siteData.url
     f = io.BytesIO()
     pickle.dump(siteData.xml, f)
-    self.cur.execute("""INSERT INTO weather (site_code, xml, timestamp, timetext)
-      VALUES (%s, %s, %s, %s) ON CONFLICT (site_code) DO UPDATE
-      SET xml = %s, timestamp = %s, timetext = %s""", 
-      (site.code, f.getvalue(), time.time(), siteData.timetext, f.getvalue(), time.time(), siteData.timetext))
+    self.cur.execute("""INSERT INTO weather (site_code, xml, timestamp, timetext, url)
+      VALUES (%s, %s, %s, %s, %s) ON CONFLICT (site_code) DO UPDATE
+      SET xml = %s, timestamp = %s, timetext = %s, url = %s""", 
+      (site.code, f.getvalue(), time.time(), siteData.timetext, site.data_url,
+        f.getvalue(), time.time(), siteData.timetext, site.data_url))
     self.conn.commit()
     self.cur.execute("""UPDATE sites SET timezone = %s WHERE code = %s""",
       (siteData.timezone, site.code))
@@ -175,7 +177,7 @@ class WeatherDB:
     }
 
   def get_weather(self, site):
-    self.cur.execute("SELECT xml, timestamp, timetext from weather WHERE site_code = %s", (site.code,))
+    self.cur.execute("SELECT xml, timestamp, timetext, url from weather WHERE site_code = %s", (site.code,))
     record = self.cur.fetchone()
     if record is None:
       result = self.add_weather(site)
@@ -185,6 +187,7 @@ class WeatherDB:
         'timestamp': record[1],
         'timetext': record[2]
       }
+      site.data_url = record[3]
     diff = time.time() - float(result['timestamp'])
     if diff > 600:
       result = self.add_weather(site)
