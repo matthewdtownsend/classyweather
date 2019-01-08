@@ -8,6 +8,7 @@ import pytz
 from utilities import icon_url, c_to_f
 
 ec_data = WeatherDB()
+# ec_data.install_ecdata() # Uncomment this line to reinitialize the database.
 
 # Object to generate site list
 

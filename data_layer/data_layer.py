@@ -43,14 +43,16 @@ class WeatherDB:
     # Check to see if database_is_setup flag is set, and if not, run installation functions.
     try: 
       if self.variable_get('database_is_setup') is None:
+        print "Database setup variable not detected."
         self.install_ecdata()
     except:
-        self.install_ecdata()
-    self.install_ecdata()
+      print "Exception on database setup detection."
+      self.install_ecdata()
 
   # Installation functions
 
   def install_ecdata(self):
+    print "Setting up database."
     self.configure_database()
     self.load_sitelist_xml()
     self.variable_set('database_is_setup',True)
