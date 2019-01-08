@@ -46,11 +46,11 @@ class Site:
         weather = ec_data.add_weather(self)
     return (weather['xml'], weather['timestamp'], weather['timetext'])
 
-  def forecast(self):
+  def longterm_forecast(self):
     forecast = []
     xml, timestamp, timetext = self.load_weather()
     for i in xml.xpath('forecastGroup/forecast'):
-      forecast.append(Forecast(i))
+      forecast.append(LongtermForecast(i))
     return forecast
 
   def hourly_forecast(self):
@@ -69,7 +69,8 @@ class Site:
     return xml.xpath(query)[0].text
   
   def radar(self):
-    return Radar(self.weather_station)
+    if self.weather_station:
+      return Radar(self.weather_station)
 
   def __str__(self):
     return "Canada Environment site %s" % self.code
@@ -78,16 +79,20 @@ class Site:
 
 class CurrentConditions:
   def __init__(self, xml):
-    self.temp_c = xml.xpath('currentConditions/temperature')[0].text
-    self.temp_f = c_to_f(xml.xpath('currentConditions/temperature')[0].text)
-    self.pressure = xml.xpath('currentConditions/pressure')[0].text
-    self.icon = icon_url(xml.xpath("currentConditions/iconCode")[0].text)
+    if xml.xpath('currentConditions')[0]:
+      self.temp_c = xml.xpath('currentConditions/temperature')[0].text
+      self.temp_f = c_to_f(xml.xpath('currentConditions/temperature')[0].text)
+      self.pressure = xml.xpath('currentConditions/pressure')[0].text
+      self.icon = icon_url(xml.xpath("currentConditions/iconCode")[0].text)
 
-class Forecast:
+class LongtermForecast:
   def __init__(self, xml):
-    self.name = xml.xpath("period")[0].text
-    self.icon = icon_url(xml.xpath("abbreviatedForecast/iconCode")[0].text)
-    self.textSummary = xml.xpath("textSummary")[0].text
+    if xml.xpath("period"):
+      self.name = xml.xpath("period")[0].text
+    if xml.xpath("abbreviatedForecast/iconCode"):
+      self.icon = icon_url(xml.xpath("abbreviatedForecast/iconCode")[0].text)
+    if xml.xpath("textSummary"):
+      self.textSummary = xml.xpath("textSummary")[0].text
 
 class HourlyForecast:
   def __init__(self, xml, timezone):

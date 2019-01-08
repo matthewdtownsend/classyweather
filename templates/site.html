@@ -3,13 +3,15 @@
 {% block content %}
     <h1>{{site.nameEn}}, {{site.province}}</h1>
 <div class="row">
+    {% if site.current_conditions().temp_c %}
     <div class="current col-lg-5  text-center">
         <img src="{{site.current_conditions().icon}}" alt="" />
 
         <p>Current temperature: {{site.current_conditions().temp_c}}C [{{site.current_conditions().temp_f}}F]</p>
          <p>Current pressure: {{site.current_conditions().pressure}}</p>
     </div>
-    {% if site.radar().precipet_list.0 %}
+    {% endif %}
+    {% if site.radar() %}
     <div class="current col-lg-7 text-center">
         <div style="position: relative; width: 100%; padding-top: 82.758%;">
             <img style="position: absolute; top: 0; left: 0; width: 100%;" class="img-responsive" src="{{site.radar().precipet_list.0}}" />
@@ -20,6 +22,7 @@
     {% endif %}
 </div>
 <hr />
+{% if site.hourly_forecast() %}
 <h2>Hourly Forecast</h2>
 <div class="row">
     {% for period in site.hourly_forecast() %}
@@ -36,9 +39,11 @@
     {% endfor %}
 </div>
 <hr />
+{% endif %}
+{% if site.longterm_forecast() %}
 <h2>Long-term Forecast</h2>
 <div class="row">
-    {% for period in site.forecast() %}
+    {% for period in site.longterm_forecast() %}
     <div class="col-md-6">
       <div class="forecast-day">
         <h3><img src="{{period.icon}}" alt="" style="width: 32px; height: auto;" />
@@ -49,10 +54,11 @@
     {% endfor %}
 </div>
 <hr />
+{% endif %}
 <div class="row">
     <div class="current col-md-12">
         <p>{{home}}</p>
-        <p>Data URL: {{site.data_url}} - Environment Canada timestamp: {{timetext}}</p>
+        <p>Data URL: <a href="{{site.data_url}}">{{site.data_url}}</a> - Environment Canada timestamp: {{timetext}}</p>
     </div>
 </div>
 {% endblock %}
