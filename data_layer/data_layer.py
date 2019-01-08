@@ -120,14 +120,15 @@ class WeatherDB:
     self.conn.commit()
 
   def get_site(self, code):
-    self.cur.execute("SELECT code,nameEn,nameFr,weather_station, province from sites WHERE code = %s", (code,))
+    self.cur.execute("SELECT code,nameEn,nameFr,weather_station, province, timezone from sites WHERE code = %s", (code,))
     record = self.cur.fetchone()
     return {
       'code': record[0],
       'nameEn': record[1],
       'nameFr': record[2],
       'weather_station': record[3],
-      'province': record[4]
+      'province': record[4],
+      'timezone': record[5]
     }
 
   # Provincial functions
@@ -163,6 +164,10 @@ class WeatherDB:
       SET xml = %s, timestamp = %s, timetext = %s""", 
       (site.code, f.getvalue(), time.time(), siteData.timetext, f.getvalue(), time.time(), siteData.timetext))
     self.conn.commit()
+    self.cur.execute("""UPDATE sites SET timezone = %s WHERE code = %s""",
+      (siteData.timezone, site.code))
+    self.conn.commit()
+    site.timezone = siteData.timezone
     return {
       'xml': f.getvalue(),
       'timestamp': time.time(),

@@ -27,7 +27,7 @@ class ecSiteData:
     self.root = etree.fromstring(self.xml)
     self.url = url
     self.timetext =  self.root.xpath("dateTime[not(@zone = 'UTC')]/textSummary")[0].text
-    site.timezone =  int(self.root.xpath("dateTime[not(@zone = 'UTC')]/@UTCOffset")[0])
+    self.timezone =  int(self.root.xpath("dateTime[not(@zone = 'UTC')]/@UTCOffset")[0])
 
 # Determine the weather station associated with a city. This requires (so far as I can tell) checking the list
 # of cities for a URL to an individual city page, and then checking that page for a radar link. None of this

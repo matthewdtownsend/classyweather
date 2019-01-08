@@ -33,6 +33,8 @@ class Site:
     self.nameEn = site_data['nameEn']
     self.nameFr = site_data['nameFr']
     self.code = site_data['code']
+    if site_data['timezone'] is not None:
+      self.timezone = int(site_data['timezone'])
     if site_data['weather_station'] is not None:
       self.weather_station = site_data['weather_station']
     else:
