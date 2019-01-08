@@ -1,6 +1,6 @@
 import os
 import jinja2
-from models import Site, Sites
+from models import Site, SiteList
 from flask import Flask, request, send_from_directory
 import markup
 
@@ -15,7 +15,7 @@ jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir))
 def city_weather():
   template = jinja_env.get_template("index.html")
   return template.render(
-    site_list = Sites().list
+    site_list = SiteList().list
   )
 
 @app.route("/site/<code>")

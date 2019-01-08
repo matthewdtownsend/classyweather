@@ -1,1 +1,1 @@
-from ec_data_reader import ecXML, ecStation, ecRadarList
+from ec_data_reader import ecSiteData, ecSiteList, ecStation, ecRadarList

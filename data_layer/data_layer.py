@@ -1,9 +1,8 @@
-from ec_data_reader import ecXML, ecStation, ecRadarList
+from ec_data_reader import ecSiteData, ecSiteList, ecStation, ecRadarList
 import psycopg2
 import json
 import sys
 import time
-import datetime
 import io
 import cPickle as pickle
 from lxml import etree
@@ -69,6 +68,7 @@ class WeatherDB:
           nameEn varchar,
           nameFr varchar,
           province varchar,
+          timezone varchar,
           weather_station varchar
         );
       """)
@@ -103,7 +103,7 @@ class WeatherDB:
   # Site and site list functions
 
   def load_sitelist_xml(self):
-    sitelist_xml = ecXML('citypage_weather/xml/siteList.xml').root
+    sitelist_xml = ecSiteList().root
     self.sites = {}
     self.provinces = {}
     for i in sitelist_xml.findall("site"):
@@ -154,19 +154,19 @@ class WeatherDB:
   # Weather data functions
 
   def add_weather(self, site):
-    xml_obj = ecXML(site.data_url())
-    timetext =  xml_obj.root.xpath("dateTime[not(@zone = 'UTC')]/textSummary")[0].text
+    siteData = ecSiteData(site)
+    site.data_url = siteData.url
     f = io.BytesIO()
-    pickle.dump(xml_obj.xml, f)
+    pickle.dump(siteData.xml, f)
     self.cur.execute("""INSERT INTO weather (site_code, xml, timestamp, timetext)
       VALUES (%s, %s, %s, %s) ON CONFLICT (site_code) DO UPDATE
       SET xml = %s, timestamp = %s, timetext = %s""", 
-      (site.code, f.getvalue(), time.time(), timetext, f.getvalue(), time.time(), timetext))
+      (site.code, f.getvalue(), time.time(), siteData.timetext, f.getvalue(), time.time(), siteData.timetext))
     self.conn.commit()
     return {
       'xml': f.getvalue(),
       'timestamp': time.time(),
-      'timetext': timetext
+      'timetext': siteData.timetext
     }
 
   def get_weather(self, site):

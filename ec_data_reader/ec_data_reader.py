@@ -11,12 +11,23 @@ from bs4 import BeautifulSoup
 
 # Fetch remote XML and parse into object
 
-class ecXML:
-  def __init__(self, url):
-    base_url = 'http://dd.weather.gc.ca'
-    response = urllib.urlopen("%s/%s" % (base_url, url))
+class ecSiteList:
+  def __init__(self):
+    url = 'http://dd.weather.gc.ca/citypage_weather/xml/siteList.xml'
+    response = urllib.urlopen(url)
     self.xml = response.read()
     self.root = etree.fromstring(self.xml)
+    self.url = url
+
+class ecSiteData:
+  def __init__(self, site, lang='En'):
+    url = "http://dd.weather.gc.ca/citypage_weather/xml/%s/%s%s.xml" % (site.province, site.code, site.lang_suffix[lang])
+    response = urllib.urlopen(url)
+    self.xml = response.read()
+    self.root = etree.fromstring(self.xml)
+    self.url = url
+    self.timetext =  self.root.xpath("dateTime[not(@zone = 'UTC')]/textSummary")[0].text
+    site.timezone =  int(self.root.xpath("dateTime[not(@zone = 'UTC')]/@UTCOffset")[0])
 
 # Determine the weather station associated with a city. This requires (so far as I can tell) checking the list
 # of cities for a URL to an individual city page, and then checking that page for a radar link. None of this

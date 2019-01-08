@@ -2,13 +2,16 @@ import collections
 from data_layer import WeatherDB
 import sys
 import re
+import time
+import datetime
+import pytz
 from utilities import icon_url, c_to_f
 
 ec_data = WeatherDB()
 
 # Object to generate site list
 
-class Sites:
+class SiteList:
     def __init__(self):
         site_dict = {}
         provinces = ec_data.list_provinces()
@@ -41,9 +44,6 @@ class Site:
         weather = ec_data.add_weather(self)
     return (weather['xml'], weather['timestamp'], weather['timetext'])
 
-  def data_url(self, lang='En'):
-    return "citypage_weather/xml/%s/%s%s.xml" % (self.province, self.code, self.lang_suffix[lang])
-
   def forecast(self):
     forecast = []
     xml, timestamp, timetext = self.load_weather()
@@ -55,7 +55,7 @@ class Site:
     hourly_forecast = []
     xml, timestamp, timetext = self.load_weather()
     for i in xml.xpath('hourlyForecastGroup/hourlyForecast'):
-      hourly_forecast.append(HourlyForecast(i))
+      hourly_forecast.append(HourlyForecast(i, self.timezone))
     return hourly_forecast
 
   def current_conditions(self):
@@ -88,8 +88,10 @@ class Forecast:
     self.textSummary = xml.xpath("textSummary")[0].text
 
 class HourlyForecast:
-  def __init__(self, xml):
-    self.time = xml.xpath("@dateTimeUTC")[0]
+  def __init__(self, xml, timezone):
+    fixed_offset = pytz.FixedOffset(timezone * 60)
+    forecast_date = pytz.utc.localize(datetime.datetime.strptime(xml.xpath("@dateTimeUTC")[0], '%Y%m%d%H%M'))
+    self.time = "{:%I %p (%A, %B %d)}".format(forecast_date.astimezone(fixed_offset)).lstrip("0").replace(" 0", " ")
     self.condition = xml.xpath("condition")[0].text
     self.icon = icon_url(xml.xpath("iconCode")[0].text)
     self.temperature = xml.xpath("temperature")[0].text
