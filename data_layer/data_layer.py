@@ -207,7 +207,11 @@ class WeatherDB:
   # Radar functions - currently a passthrough via ec_data_reader without database storage/caching
 
   def get_radar_list(self, station):
-    return ecRadarList(station).radar_list
+    radar_list = ecRadarList(station).radar_list
+    if not radar_list:
+      return False
+    else:
+      return radar_list
 
   # Stored variable functions
 

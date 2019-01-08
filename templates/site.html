@@ -9,6 +9,7 @@
         <p>Current temperature: {{site.current_conditions().temp_c}}C [{{site.current_conditions().temp_f}}F]</p>
          <p>Current pressure: {{site.current_conditions().pressure}}</p>
     </div>
+    {% if site.radar().precipet_list.0 %}
     <div class="current col-lg-7 text-center">
         <div style="position: relative; width: 100%; padding-top: 82.758%;">
             <img style="position: absolute; top: 0; left: 0; width: 100%;" class="img-responsive" src="{{site.radar().precipet_list.0}}" />
@@ -16,6 +17,7 @@
         
         </div>
     </div>
+    {% endif %}
 </div>
 <hr />
 <h2>Hourly Forecast</h2>
