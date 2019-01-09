@@ -29,7 +29,7 @@ class WeatherDB:
 
     except Exception, e:
       print(str(e))
-      print("Fatal error. Cannot parse config file.")
+      print("Fatal error. Cannot parse config file. Make sure to create a config.json file based upon config.json.example with Postgresql credentials.")
       sys.exit()
       
     try:
