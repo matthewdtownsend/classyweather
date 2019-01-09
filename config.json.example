@@ -1,0 +1,7 @@
+{
+    "USER": "weather",
+    "DATABASE": "weather",
+    "PASSWORD": "weather_password",
+    "HOST": "localhost",
+    "PORT": "5432"
+}
